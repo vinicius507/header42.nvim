@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2021/12/26 19:35:33 by vgoncalv         ###   ########.fr       --
+--   Updated: 2021/12/27 07:21:08 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
@@ -36,7 +36,7 @@ end
 
 M.format = M.format or load_format()
 
-local function get_header(ft_config)
+function M.get_header(ft_config)
 	local header = {}
 	ft_config = ft_config or {}
 	setmetatable(ft_config, {
@@ -50,9 +50,11 @@ local function get_header(ft_config)
 				end
 				return utils.padding(k, t[section])
 			elseif k:match('%w+_date') then
-				return '[^%s]+ [^%s]+'
+				return '([^%s]+ [^%s]+)'
+			elseif k:match('%w+_comment') then
+				return '[^%s]+'
 			end
-			return '[^%s]+'
+			return '([^%s]+)'
 		end,
 	})
 	for _, line in ipairs(M.format) do
@@ -62,7 +64,7 @@ local function get_header(ft_config)
 end
 
 function M.is_present()
-	local format = get_header()
+	local format = M.get_header()
 	local ok, lines = pcall(vim.api.nvim_buf_get_lines, 0, 0, 11, 0)
 	if not ok or #format ~= #lines then
 		return false
@@ -81,7 +83,7 @@ end
 function M.insert()
 	local filename = fn.expand('%:t')
 	local created_date = fn.strftime('%Y/%m/%d %H:%M:%S')
-	local header = get_header({
+	local header = M.get_header({
 		filename = filename,
 		intra_login = config.intra_login(),
 		intra_mail = config.intra_mail(),
@@ -95,15 +97,19 @@ function M.insert()
 		fn.append(linenum - 1, line)
 	end
 	fn.append(11, '')
+	require('header42.highlight').highlight()
 end
 
 function M.update()
+	if not M.is_present() then
+		return
+	end
 	local current = vim.api.nvim_buf_get_lines(0, 0, 11, 0)
 	local filename = fn.expand('%:t')
 	local start_comment, end_comment = current[1]:match(
 		'([^%s]+) [^%s]+ ([^%s]+)'
 	)
-	local header = get_header({
+	local header = M.get_header({
 		filename = filename,
 		intra_login = config.intra_login(),
 		updated_date = fn.strftime('%Y/%m/%d %H:%M:%S'),
@@ -112,6 +118,7 @@ function M.update()
 	})
 	fn.setline(4, header[4])
 	fn.setline(9, header[9])
+	require('header42.highlight').highlight_update()
 end
 
 return M

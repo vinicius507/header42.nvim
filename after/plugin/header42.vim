@@ -5,15 +5,23 @@
 ""                                                    +:+ +:+         +:+     ""
 ""   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        ""
 ""                                                +#+#+#+#+#+   +#+           ""
-""   Created: 2021/12/26 23:57:03 by vgoncalv          #+#    #+#             ""
-""   Updated: 2021/12/27 07:24:45 by vgoncalv         ###   ########.fr       ""
+""   Created: 2021/12/27 03:23:40 by vgoncalv          #+#    #+#             ""
+""   Updated: 2021/12/27 07:27:47 by vgoncalv         ###   ########.fr       ""
 ""                                                                            ""
 "" ************************************************************************** ""
 
-function header42#Highlight() abort
-	if luaeval("require'header42.header'.is_present()")
-		lua require'header42.highlight'.highlight()
-	endif
-endfunction
+hi def link Header42 Comment
+hi def link Header42Filename PreProc
+hi def link Header42Section Header42
+hi def link Header42Keyword Header42
+hi def link Header42Title PreProc
+hi def link Header42Author Constant
+hi def link Header42Mail Keyword
+hi def link Header42Date Constant
+hi def link Header42Logo PreProc
 
-command! Stdheader lua require'header42'.Stdheader()
+augroup header42
+	autocmd!
+	autocmd BufRead * call header42#Highlight()
+	autocmd BufWritePost * lua require'header42.header'.update()
+augroup end
