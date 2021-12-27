@@ -56,19 +56,25 @@ local default_config = {
 
 ---@param opts table
 function M.setup(opts)
-	M.config = setmetatable(opts or {}, {
+	local config = vim.tbl_deep_extend('force', default_config, opts or {})
+	M.config = setmetatable(config, {
 		__index = default_config,
 	})
-	return M.config
 end
 
 ---@return string: intra login
 function M.intra_login()
+	if M.config.ft[bo.filetype] ~= nil then
+		return M.config.ft[bo.filetype].intra_login or M.config.intra_login
+	end
 	return M.config.intra_login
 end
 
 ---@return string: intra mail
 function M.intra_mail()
+	if M.config.ft[bo.filetype] ~= nil then
+		return M.config.ft[bo.filetype].intra_mail or M.config.intra_mail
+	end
 	return M.config.intra_mail
 end
 

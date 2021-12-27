@@ -1,0 +1,11 @@
+{start_comment} {                              fill_comment                              } {end_comment}
+{start_comment}                                                                            {end_comment}
+{start_comment}                                                        :::      ::::::::   {end_comment}
+{start_comment}   {filename}{             filename_padding          }:+:      :+:    :+:   {end_comment}
+{start_comment}                                                    +:+ +:+         +:+     {end_comment}
+{start_comment}   By: {intra_login} <{intra_mail}>{author_padding}+#+  +:+       +#+        {end_comment}
+{start_comment}                                                +#+#+#+#+#+   +#+           {end_comment}
+{start_comment}   Created: {created_date} by {intra_login}{created_padding}#+#    #+#             {end_comment}
+{start_comment}   Updated: {updated_date} by {intra_login}{updated_padding}###   ########.fr       {end_comment}
+{start_comment}                                                                            {end_comment}
+{start_comment} {                              fill_comment                              } {end_comment}
