@@ -1,19 +1,28 @@
 local utils = {}
 
---- Log message
-local function log(msg, hl)
-	hl = hl or "String"
-	vim.api.nvim_echo({ { "[header42.nvim] ", hl }, { msg } }, true, {})
+local fn = vim.fn
+local notify = vim.notify
+
+---@param msg string
+function utils.error(msg)
+	notify(msg, 'error', { title = 'header42.nvim' })
 end
 
---- Warning log message
-utils.warn = function(msg)
-	log(msg, "WarningMsg")
-end
+---@return string: header42 format
+function utils.load_format()
+	local format = {}
+	local filepaths = fn.glob(fn.stdpath('data') .. '**/header_format', 0, 1)
 
---- Error log message
-utils.error = function(msg)
-	log(msg, "Error")
+	if #filepaths == 0 then
+		utils.error(
+			"Could not find header_format. Make sure header42.nvim is installed in stdpath('data'"
+		)
+	end
+
+	for line in io.lines(filepaths[1]) do
+		format[#format + 1] = line
+	end
+	return format
 end
 
 return utils
