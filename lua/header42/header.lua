@@ -6,12 +6,13 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2021/12/27 07:21:08 by vgoncalv         ###   ########.fr       --
+--   Updated: 2022/01/07 08:48:39 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
 local M = {}
 
+local bo = vim.bo
 local fn = vim.fn
 
 local config = require('header42.config')
@@ -81,6 +82,10 @@ function M.is_present()
 end
 
 function M.insert()
+	if config(bo.filetype) == nil then
+		utils.errorf("filetype '%s' is not configured", bo.filetype)
+		return
+	end
 	local filename = fn.expand('%:t')
 	local created_date = fn.strftime('%Y/%m/%d %H:%M:%S')
 	local header = M.get_header({

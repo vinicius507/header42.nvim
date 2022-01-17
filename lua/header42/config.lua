@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:40 by vgoncalv          #+#    #+#             --
---   Updated: 2021/12/26 19:31:23 by vgoncalv         ###   ########.fr       --
+--   Updated: 2022/01/07 07:59:09 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
@@ -62,6 +62,12 @@ function M.setup(opts)
 	})
 end
 
+---@param ft string: filetype
+---@return table: filetype configuration
+function M.get_config(ft)
+	return M.config.ft[ft]
+end
+
 ---@return string: intra login
 function M.intra_login()
 	if M.config.ft[bo.filetype] ~= nil then
@@ -93,4 +99,8 @@ function M.end_comment()
 	return M.config.ft[bo.filetype].end_comment
 end
 
-return M
+return setmetatable(M, {
+	__call = function(_, ft)
+		return M.get_config(ft)
+	end,
+})
