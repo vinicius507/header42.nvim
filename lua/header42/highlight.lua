@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/12/27 05:38:50 by vgoncalv          #+#    #+#             --
---   Updated: 2021/12/27 07:28:51 by vgoncalv         ###   ########.fr       --
+--   Updated: 2022/01/07 08:25:34 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
@@ -15,10 +15,11 @@ local M = {}
 local highlight = vim.highlight
 
 local header = require('header42.header')
+local utils = require('header42.utils')
 
 local function highlight_varwords(hl, word, line, linenum)
 	if word == nil then
-		vim.notify(hl, 'error')
+		utils.errorf("could not find target fot hl '%s'", hl)
 		return
 	end
 	local start, _ = string.find(line, word)
