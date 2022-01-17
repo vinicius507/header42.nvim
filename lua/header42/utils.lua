@@ -1,10 +1,14 @@
 local utils = {}
 
-local notify = vim.notify
-
 ---@param msg string
 function utils.error(msg)
-	notify(msg, 'error', { title = 'header42.nvim' })
+	vim.notify(msg, 'error', { title = 'header42.nvim' })
+end
+
+---@param fmt string
+---@param ... string
+function utils.errorf(fmt, ...)
+	vim.notify(string.format(fmt, ...), 'error', { title = 'header42.nvim' })
 end
 
 ---@param section string: section to pad
