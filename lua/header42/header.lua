@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 10:12:18 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 15:21:50 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -25,6 +25,7 @@ local TEMPLATE = {
 	"                                                                          ",
 	"**************************************************************************",
 }
+local TEMPLATE_STR = table.concat(TEMPLATE, "\n")
 
 ---@class HeaderData
 ---@field filename string
@@ -59,6 +60,75 @@ function M.new(opts)
 	header[#header + 1] = ""
 
 	return header
+end
+
+---@param str string
+local function escape(str)
+	-- Honestly, thanks to: https://stackoverflow.com/questions/6705872/how-to-escape-a-variable-in-lua
+	local magic_chars = "%p"
+	local esacaped_str, _ = string.gsub(str, magic_chars, "%%%1")
+
+	return esacaped_str
+end
+
+---@type fun(lines: string[]): boolean
+function M.is_header(lines)
+	if #lines < 11 then
+		return false
+	end
+
+	for lineno = 1, #lines do
+		local line = string.gsub(lines[lineno], "[^%s]+ (.*) [^%s]+", "%1")
+
+		-- Escape punctuation chars
+		local template_line = string.gsub(TEMPLATE[lineno] or "", "[+*]", "%%%1")
+
+		local range = { string.find(template_line, "@[%w_]*%.*") }
+		local has_annotations = range ~= 0
+
+		if has_annotations then
+			template_line = string.gsub(template_line, "@[%w_]*%.*", function(annotation)
+				return string.rep(".", annotation:len())
+			end)
+		end
+
+		if not string.match(line, template_line) then
+			return false
+		end
+	end
+
+	return true
+end
+
+---Retrieves the data from an existing École 42 Header
+---@type fun(header: string): HeaderData
+function M.get_data(header)
+	---@type table<string, any>
+	local data = {
+		delimeters = {
+			string.match(header, "^([^%s]+).-([^%s]+)\n$"),
+		},
+	}
+	local header_lines = vim.fn.split(header, "\n")
+	for lineno = 1, #TEMPLATE do
+		-- We add the delimeters from the header to the substitution pattern so we
+		-- can remove them
+		local line = string.gsub(
+			header_lines[lineno],
+			string.format("%s (.*) %s", unpack(vim.tbl_map(escape, data.delimeters))),
+			"%1"
+		)
+		local template_line = TEMPLATE[lineno]
+
+		for annotation, key in string.gmatch(template_line, "(@([%w_]+)%.*)") do
+			key = key:lower()
+			local range = { string.find(template_line, annotation) }
+
+			data[key] = vim.fn.trim(string.sub(line, unpack(range)))
+		end
+	end
+
+	return data
 end
 
 return M
