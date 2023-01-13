@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2023/01/13 15:19:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 17:25:12 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 18:18:08 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -32,9 +32,9 @@ function M.update(bufnr, insert_on_empty)
 
 	---@type HeaderData
 	local opts
-	local ok, present = pcall(Header.frombuffer, bufnr)
+	local present = Header.frombuffer(bufnr)
 
-	if not ok or (present == nil and not insert_on_empty) then
+	if present == nil and not insert_on_empty then
 		return
 	end
 
