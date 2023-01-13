@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:40 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 17:25:18 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 18:36:42 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -30,7 +30,7 @@ function M.setup(opts)
 	settings = vim.tbl_extend("force", defaults, opts or {})
 
 	vim.api.nvim_create_user_command("Stdheader", function()
-		api.update(0, true)
+		api.update(0, nil, true)
 	end, {})
 
 	vim.api.nvim_create_augroup("Header42", { clear = true })

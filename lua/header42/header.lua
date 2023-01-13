@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 17:24:S  by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 18:35:46 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -137,17 +137,15 @@ local function lines_are_header(lines)
 end
 
 ---Retrieves the data from an existing École 42 Header
----@type fun(bufnr: integer): Header
+---@type fun(bufnr: integer): Header?
 function M.frombuffer(bufnr)
 	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 12, false)
 
-	vim.validate({
-		lines = {
-			lines,
-			lines_are_header,
-			string.format("no header at buffer %d", bufnr),
-		},
-	})
+	local ok = pcall(vim.validate, { lines = { lines, lines_are_header, "École 42 header" } })
+
+	if not ok then
+		return nil
+	end
 
 	---@type table<string, any>
 	local data = {

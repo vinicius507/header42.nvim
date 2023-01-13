@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2023/01/13 15:19:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 18:18:08 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 18:36:15 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -26,23 +26,26 @@ function M.insert(bufnr, opts)
 end
 
 ---@param bufnr? integer
+---@param opts? HeaderData
 ---@param insert_on_empty? boolean
-function M.update(bufnr, insert_on_empty)
+function M.update(bufnr, opts, insert_on_empty)
 	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	opts = opts or {}
 
-	---@type HeaderData
-	local opts
 	local present = Header.frombuffer(bufnr)
 
-	if present == nil and not insert_on_empty then
+	if present == nil then
+		if insert_on_empty == true then
+			M.insert(bufnr, opts)
+		end
 		return
 	end
 
 	if present ~= nil then
-		opts = {
+		opts = vim.tbl_extend("force", opts, {
 			created_at = present.created_at,
 			created_by = present.created_by,
-		}
+		})
 	end
 
 	local header = Header.new(bufnr, opts)
