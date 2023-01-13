@@ -26,6 +26,10 @@ local settings
 ---@type fun(opts: FtHeaderConfig?)
 function M.setup(opts)
 	settings = vim.tbl_extend("force", defaults, opts or {})
+
+	vim.api.nvim_create_user_command("Stdheader", function()
+		require("header42.api").update(true)
+	end, {})
 end
 
 setmetatable(M, {
