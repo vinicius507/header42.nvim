@@ -6,11 +6,22 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 15:21:50 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 17:24:S  by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
+---@class Header
+---@field filename string
+---@field author {login: string, email: string}
+---@field created_at string
+---@field created_by string
+---@field updated_at string
+---@field updated_by string
+---@field delimeters string[]
 local M = {}
+
+local config = require("header42.config")
+local delimeters = require("header42.delimeters")
 
 local TEMPLATE = {
 	"**************************************************************************",
@@ -26,22 +37,58 @@ local TEMPLATE = {
 	"**************************************************************************",
 }
 
----@class HeaderData
----@field filename string
----@field author string
----@field created_at string
----@field created_by string
----@field updated_at string
----@field updated_by string
----@field delimeters string[]
+---@alias HeaderData Header
+
+---@param bufnr integer
+local function buf_delimeters(bufnr)
+	local ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
+	return delimeters[ft]
+end
+
+---@param bufnr integer
+local function buf_filename(bufnr)
+	local filename = vim.api.nvim_buf_get_name(bufnr)
+	return vim.fn.fnamemodify(filename, ":t")
+end
 
 ---Creates a new École 42 Header
----@type fun(opts: HeaderData): string[]
-function M.new(opts)
-	local header = vim.tbl_map(function(line)
+---@type fun(bufnr: integer, opts?: HeaderData): Header
+function M.new(bufnr, opts)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	local now = vim.fn.strftime("%Y/%m/%d %H:%M:%S")
+
+	opts = vim.tbl_extend(
+		"keep",
+		opts or {},
+		---@type HeaderData
+		{
+			author = {
+				login = config.login,
+				email = config.email,
+			},
+			delimeters = buf_delimeters(bufnr),
+			filename = buf_filename(bufnr),
+			created_at = now,
+			created_by = config.login,
+			updated_at = now,
+			updated_by = config.login,
+		}
+	)
+
+	return setmetatable(opts or {}, { __index = M })
+end
+
+---@return string[]
+function M:lines()
+	local lines = vim.tbl_map(function(line)
 		-- Substitute each @KEY by its respective value
 		line = string.gsub(line, "(@([%w_]*)%.*)", function(match, key)
-			local data = opts[key:lower()]
+			key = key:lower()
+			local data = self[key]
+
+			if key == "author" then
+				data = string.format("%s <%s>", self.author.login, self.author.email)
+			end
 
 			if data:len() < match:len() then
 				local gap = match:len() - data:len()
@@ -52,26 +99,16 @@ function M.new(opts)
 		end)
 
 		-- Add the header delimeters to the line and return it
-		return string.format("%s %s %s", opts.delimeters[1], line, opts.delimeters[2])
+		return string.format("%s %s %s", self.delimeters[1], line, self.delimeters[2])
 	end, TEMPLATE)
 
 	-- Append an empty line to the header
-	header[#header + 1] = ""
-
-	return header
-end
-
----@param str string
-local function escape(str)
-	-- Honestly, thanks to: https://stackoverflow.com/questions/6705872/how-to-escape-a-variable-in-lua
-	local magic_chars = "%p"
-	local esacaped_str, _ = string.gsub(str, magic_chars, "%%%1")
-
-	return esacaped_str
+	lines[#lines + 1] = ""
+	return lines
 end
 
 ---@type fun(lines: string[]): boolean
-function M.is_header(lines)
+local function lines_are_header(lines)
 	if #lines < 11 then
 		return false
 	end
@@ -100,21 +137,35 @@ function M.is_header(lines)
 end
 
 ---Retrieves the data from an existing École 42 Header
----@type fun(header: string): HeaderData
-function M.get_data(header)
+---@type fun(bufnr: integer): Header
+function M.frombuffer(bufnr)
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 12, false)
+
+	vim.validate({
+		lines = {
+			lines,
+			lines_are_header,
+			string.format("no header at buffer %d", bufnr),
+		},
+	})
+
 	---@type table<string, any>
 	local data = {
 		delimeters = {
-			string.match(header, "^([^%s]+).-([^%s]+)\n$"),
+			string.match(lines[1], "^([^%s]+) .- ([^%s]+)$"),
 		},
 	}
-	local header_lines = vim.fn.split(header, "\n")
+	local escaped_delimeters = {
+		string.gsub(data.delimeters[1], "[+*]", "%%%1"),
+		string.gsub(data.delimeters[2], "[+*]", "%%%1"),
+	}
+
 	for lineno = 1, #TEMPLATE do
 		-- We add the delimeters from the header to the substitution pattern so we
 		-- can remove them
 		local line = string.gsub(
-			header_lines[lineno],
-			string.format("%s (.*) %s", unpack(vim.tbl_map(escape, data.delimeters))),
+			lines[lineno],
+			string.format("%s (.*) %s", unpack(escaped_delimeters)),
 			"%1"
 		)
 		local template_line = TEMPLATE[lineno]

@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:40 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/13 10:13:06 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/13 17:25:18 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -25,11 +25,20 @@ local settings
 
 ---@type fun(opts: FtHeaderConfig?)
 function M.setup(opts)
+	local api = require("header42.api")
+
 	settings = vim.tbl_extend("force", defaults, opts or {})
 
 	vim.api.nvim_create_user_command("Stdheader", function()
-		require("header42.api").update(true)
+		api.update(0, true)
 	end, {})
+
+	vim.api.nvim_create_augroup("Header42", { clear = true })
+	vim.api.nvim_create_autocmd("BufWritePre", {
+		callback = function()
+			api.update(0)
+		end,
+	})
 end
 
 setmetatable(M, {
