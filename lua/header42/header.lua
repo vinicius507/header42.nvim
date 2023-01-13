@@ -25,7 +25,6 @@ local TEMPLATE = {
 	"                                                                          ",
 	"**************************************************************************",
 }
-local TEMPLATE_STR = table.concat(TEMPLATE, "\n")
 
 ---@class HeaderData
 ---@field filename string
