@@ -1,48 +1,56 @@
 # header42.nvim
 
-École 42's stdheader plugin written in Lua
+École 42's header plugin written in Lua
 
-## Installation
-
-Just install using your package manager of choice:
-
-```lua
-use 'eduardomosko/header42.nvim'
+```
+# ************************************************************************** #
+#                                                                            #
+#                                                        :::      ::::::::   #
+#   api.lua                                            :+:      :+:    :+:   #
+#                                                    +:+ +:+         +:+     #
+#   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        #
+#                                                +#+#+#+#+#+   +#+           #
+#   Created: 2023/01/13 09:30:28 by vgoncalv          #+#    #+#             #
+#   Updated: 2023/01/13 09:30:28 by vgoncalv         ###   ########.fr       #
+#                                                                            #
+# ************************************************************************** #
 ```
 
+## Installation
+<details><summary>Using lazy.nvim</summary>
+
+header42.nvim LazySpec:
+
+```lua
+local spec = {
+	"vinicius507/header42.nvim",
+}
+```
+</details>
+
+<details><summary>Using Packer</summary>
+
+```lua
+use({
+	"vinicius507/header42.nvim",
+})
+```
+</details>
 
 ## Setup
-
-You may configure your username and email as such:
+To use header42.nvim, you need to set your Intra `login` and `email`:
 
 ```lua
 local header = require('header42')
 
 header.setup({
-	user = 'marvin',
-	mail = 'marvin@42.fr',
-	-- You can also extend filetypes, e.g:
-	ft = {
-		lua = {
-			start_comment = '--',
-			end_comment = '--',
-			fill_comment = '-',
-		}
-	}
+	login = "marvin",
+	email = "marvin@42.fr",
 })
 ```
 
-## Supported Filetypes by Default
+## API
+Header42 exposes a public API for settings autocmds/keymaps.
 
-- `c` for C files
-- `cpp` for C++ and header files
-- `python` for python files
-- `lua` for lua files
-- `make` for Makefiles
-- `vim` for vimscript files
-
-## Mappings
-
-header42.nvim does not provide default mappings, so you can map a to the command `<cmd>Stdheader`.
-
-Although this plugins does not provide mappings, it sets up `autocmd` to update the header.
+### `norme.api.insert`
+Inserts an École 42 Header at the current buffer
