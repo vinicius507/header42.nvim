@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/14 16:38:49 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/14 16:56:03 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -128,10 +128,15 @@ local function lines_are_header(lines)
 	end
 
 	local delimeter_len = lines_delimeter[1]:len()
+	local escaped_delimeters = vim.tbl_map(function(delim)
+		delim = string.gsub(delim, "[+*]", "%%%1")
+		return delim
+	end, lines_delimeter)
+
 	for lineno = 1, #lines do
 		local line = lines[lineno]
 
-		if not string.match(line, string.format("^%s .- %s$", unpack(lines_delimeter))) then
+		if not string.match(line, string.format("^%s .- %s$", unpack(escaped_delimeters))) then
 			return false
 		end
 
@@ -155,8 +160,6 @@ local function lines_are_header(lines)
 		end
 
 		if not string.match(line, template_line) then
-			print(line)
-			print(template_line)
 			return false
 		end
 	end
