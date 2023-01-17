@@ -6,18 +6,19 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/14 16:56:03 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/17 18:43:50 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
 ---@class Header
+---@field bufnr integer
 ---@field filename string
----@field author {login: string, email: string}
+---@field author Author
+---@field delimeters string[]
 ---@field created_at string
 ---@field created_by string
 ---@field updated_at string
 ---@field updated_by string
----@field delimeters string[]
 local M = {}
 
 local config = require("header42.config")
@@ -37,76 +38,126 @@ local TEMPLATE = {
 	"********************************************************************************",
 }
 
----@alias HeaderData Header
+---@class Author
+---@field login string
+---@field email string
+local Author = {}
 
----@param bufnr integer
+---@type fun(self: Author, login: string, email: string): Author
+function Author:new(login, email)
+	local o = {
+		login = login,
+		email = email,
+	}
+	return setmetatable(o, { __index = self, __tostring = self.tostring })
+end
+
+---@param str string
+function Author:fromstring(str)
+	local login, email = string.match(str, "^[^%s]+ <^%s+>$")
+
+	if not login or not email then
+		return nil
+	end
+
+	return self:new(login, email)
+end
+
+---@type fun(self: Author): string
+function Author:tostring()
+	return string.format("%s <%s>", self.login, self.email)
+end
+
+---@alias HeaderData Header
+---@alias HeaderField number|string|string[]|Author
+---@alias HeaderFieldKey
+---|"bufnr"
+---|"filename"
+---|"author"
+---|"delimeters"
+---|"created_at"
+---|"created_by"
+---|"updated_at"
+---|"updated_at"
+
+---@type fun(bufnr: integer): string[]
 local function buf_delimeters(bufnr)
 	local ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
 	return delimeters[ft]
 end
 
----@param bufnr integer
+---@type fun(bufnr: integer): string
 local function buf_filename(bufnr)
 	local filename = vim.api.nvim_buf_get_name(bufnr)
 	return vim.fn.fnamemodify(filename, ":t")
 end
 
+---@type fun(): string
+local function created_at()
+	return vim.fn.strftime("%Y/%m/%d %H:%M:%S")
+end
+
+setmetatable(M, {
+	---@type fun(self: Header, field: HeaderFieldKey): HeaderField
+	__index = function(self, field)
+		if field == "author" then
+			return Author:new(config.login, config.email)
+		elseif field == "bufnr" then
+			return vim.api.nvim_get_current_buf()
+		elseif field == "delimeters" then
+			return buf_delimeters(self.bufnr)
+		elseif field == "filename" then
+			return buf_filename(self.bufnr)
+		elseif field == "created_at" then
+			return created_at()
+		elseif field == "created_by" then
+			return config.login
+		elseif field == "updated_at" then
+			return self.created_at
+		elseif field == "updated_by" then
+			return config.login
+		end
+		return self[field]
+	end,
+	---@type fun(self: Header, field: HeaderFieldKey, value: HeaderField)
+	__newindex = function(self, field, value)
+		if field == "author" and type(value) == "string" then
+			---@cast value string
+			rawset(self, field, Author:fromstring(value))
+		else
+			rawset(self, field, value)
+		end
+	end,
+})
+
 ---Creates a new École 42 Header
----@type fun(bufnr: integer, opts?: HeaderData): Header
-function M.new(bufnr, opts)
-	bufnr = bufnr or vim.api.nvim_get_current_buf()
-	local now = vim.fn.strftime("%Y/%m/%d %H:%M:%S")
+---@type fun(self: Header, opts?: HeaderData): Header
+function M:new(opts)
+	return setmetatable(opts or {}, { __index = self })
+end
 
-	opts = vim.tbl_extend(
-		"keep",
-		opts or {},
-		---@type HeaderData
-		{
-			author = {
-				login = config.login,
-				email = config.email,
-			},
-			delimeters = buf_delimeters(bufnr),
-			filename = buf_filename(bufnr),
-			created_at = now,
-			created_by = config.login,
-			updated_at = now,
-			updated_by = config.login,
-		}
-	)
-
-	return setmetatable(opts or {}, { __index = M })
+---@param line string
+---@param delim string[]
+local function add_delimeters(line, delim)
+	line = string.sub(line, delim[1]:len() + 2, line:len() - delim[2]:len() - 1)
+	return string.format("%s %s %s", delim[1], line, delim[2])
 end
 
 ---@return string[]
 function M:lines()
-	local lines = vim.tbl_map(function(line)
-		-- Substitute each @KEY by its respective value
-		line = string.gsub(line, "(@([%w_]*)%.*)", function(match, key)
-			key = key:lower()
-			local data = self[key]
-
-			if key == "author" then
-				data = string.format("%s <%s>", self.author.login, self.author.email)
-			end
-
-			if data:len() < match:len() then
-				local gap = match:len() - data:len()
-				data = data .. string.rep(" ", gap)
-			end
-
-			return data
-		end)
-
-		-- Add the header delimeters to the line and return it
-		local delimeter_len = string.len(self.delimeters[1])
-		return string.format(
-			"%s %s %s",
-			self.delimeters[1],
-			string.sub(line, delimeter_len + 2, line:len() - delimeter_len - 1),
-			self.delimeters[2]
-		)
+	local lines = vim.tbl_map(function(template_line)
+		return add_delimeters(template_line, self.delimeters)
 	end, TEMPLATE)
+	local annotated_lines = { 4, 6, 8, 9 }
+
+	for _, lineno in ipairs(annotated_lines) do
+		lines[lineno] = string.gsub(lines[lineno], "(@([%w_]*)%.*)", function(match, key)
+			key = key:lower()
+			local data = tostring(self[key])
+			local pad = string.rep(" ", match:len() > data:len() and match:len() - data:len() or 0)
+			return string.format("%s%s", data, pad)
+		end)
+	end
 
 	-- Append an empty line to the header
 	lines[#lines + 1] = ""
@@ -121,43 +172,21 @@ local function lines_are_header(lines)
 		return false
 	end
 
-	local lines_delimeter = { string.match(lines[1], "^([^%s]+) .- ([^%s]+)$") }
+	local annotated_lines = { 4, 6, 8, 9 }
+	local lines_delimeters = { string.match(lines[1], "^([^%s]+) .* ([^%s]+)$") }
 
-	if not #lines_delimeter then
-		return false
-	end
-
-	local delimeter_len = lines_delimeter[1]:len()
-	local escaped_delimeters = vim.tbl_map(function(delim)
-		delim = string.gsub(delim, "[+*]", "%%%1")
-		return delim
-	end, lines_delimeter)
-
-	for lineno = 1, #lines do
+	for lineno, template_line in ipairs(TEMPLATE) do
 		local line = lines[lineno]
+		template_line = add_delimeters(template_line, lines_delimeters)
 
-		if not string.match(line, string.format("^%s .- %s$", unpack(escaped_delimeters))) then
-			return false
-		end
-
-		local template_line = string.format(
-			"%s %s %s",
-			lines_delimeter[1],
-			string.sub(TEMPLATE[lineno], delimeter_len + 2, line:len() - delimeter_len - 1),
-			lines_delimeter[2]
-		)
-
-		-- Escape punctuation chars
-		template_line = string.gsub(template_line or "", "[+*]", "%%%1")
-
-		local range = { string.find(template_line, "@[%w_]*%.*") }
-		local has_annotations = range ~= 0
-
-		if has_annotations then
-			template_line = string.gsub(template_line, "@[%w_]*%.*", function(annotation)
-				return string.rep(".", annotation:len())
+		if vim.tbl_contains(annotated_lines, lineno) then
+			template_line = string.gsub(template_line, "@[%w_]+%.*", function(match)
+				local range = { string.find(template_line, match, 1, true) }
+				return string.sub(line, unpack(range))
 			end)
 		end
+
+		template_line = string.gsub(template_line, "[+*]", "%%%1")
 
 		if not string.match(line, template_line) then
 			return false
@@ -167,55 +196,36 @@ local function lines_are_header(lines)
 	return true
 end
 
--- TODO: find a better way to extract information from a buffer
-
 ---Retrieves the data from an existing École 42 Header
----@type fun(bufnr: integer): Header?
-function M.frombuffer(bufnr)
-	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 11, false)
+---@type fun(self: Header, bufnr: integer): Header?
+function M:frombuffer(bufnr)
+	bufnr = bufnr or vim.api.nvim_get_current_buf()
+	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 12, false)
 
-	local ok = pcall(vim.validate, { lines = { lines, lines_are_header, "École 42 header" } })
-
-	if not ok then
-		return nil
+	if not lines_are_header(lines) then
+		return
 	end
 
 	---@type table<string, any>
-	local data = {
+	local opts = {
+		bufnr = bufnr,
 		delimeters = {
 			string.match(lines[1], "^([^%s]+) .- ([^%s]+)$"),
 		},
 	}
-	local delimeter_len = string.len(data.delimeters[1])
 
-	for lineno = 1, #TEMPLATE do
+	for lineno, template_line in ipairs(TEMPLATE) do
 		local line = lines[lineno]
-		local template_line = string.format(
-			"%s %s %s",
-			data.delimeters[1],
-			string.sub(TEMPLATE[lineno], delimeter_len + 2, line:len() - delimeter_len - 1),
-			data.delimeters[2]
-		)
 
 		for annotation, key in string.gmatch(template_line, "(@([%w_]+)%.*)") do
 			key = key:lower()
 			local range = { string.find(template_line, annotation) }
-			local content = vim.fn.trim(string.sub(line, unpack(range)))
 
-			if key == "author" then
-				local login, email = string.match(content, "^([^%s]+) <([^%s]+)>")
-
-				data[key] = {
-					login = login,
-					email = email,
-				}
-			else
-				data[key] = content
-			end
+			opts[key] = vim.fn.trim(string.sub(line, unpack(range)))
 		end
 	end
 
-	return data
+	return self:new(opts)
 end
 
 return M
