@@ -6,7 +6,7 @@
 --   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
 --                                                +#+#+#+#+#+   +#+           --
 --   Created: 2021/09/12 20:57:30 by vgoncalv          #+#    #+#             --
---   Updated: 2023/01/17 18:43:50 by vgoncalv         ###   ########.fr       --
+--   Updated: 2023/01/18 09:24:54 by vgoncalv         ###   ########.fr       --
 --                                                                            --
 -- ************************************************************************** --
 
@@ -174,6 +174,10 @@ local function lines_are_header(lines)
 
 	local annotated_lines = { 4, 6, 8, 9 }
 	local lines_delimeters = { string.match(lines[1], "^([^%s]+) .* ([^%s]+)$") }
+
+	if #lines_delimeters == 0 then
+		return false
+	end
 
 	for lineno, template_line in ipairs(TEMPLATE) do
 		local line = lines[lineno]
