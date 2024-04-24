@@ -83,7 +83,7 @@ end
 ---@type fun(bufnr: integer): string[]
 local function buf_delimeters(bufnr)
 	local ft = vim.api.nvim_buf_get_option(bufnr, "filetype")
-	return delimeters[ft]
+	return delimeters[ft] or delimeters.default
 end
 
 ---@type fun(bufnr: integer): string

@@ -33,6 +33,7 @@ local delimeters = {
 ---Language delimeters
 ---@type table<string, FtHeaderDelimeter>
 local languages_delimeters = {
+	default = delimeters.HASHES,
 	c = delimeters.SLASHES,
 	cpp = delimeters.SLASHES,
 	css = delimeters.SLASHES,
