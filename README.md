@@ -3,27 +3,33 @@
 École 42's header plugin written in Lua
 
 ```
-# ************************************************************************** #
-#                                                                            #
-#                                                        :::      ::::::::   #
-#   api.lua                                            :+:      :+:    :+:   #
-#                                                    +:+ +:+         +:+     #
-#   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        #
-#                                                +#+#+#+#+#+   +#+           #
-#   Created: 2023/01/13 09:30:28 by vgoncalv          #+#    #+#             #
-#   Updated: 2023/01/13 09:30:28 by vgoncalv         ###   ########.fr       #
-#                                                                            #
-# ************************************************************************** #
+-- ************************************************************************** --
+--                                                                            --
+--                                                        :::      ::::::::   --
+--   api.lua                                            :+:      :+:    :+:   --
+--                                                    +:+ +:+         +:+     --
+--   By: vgoncalv <vgoncalv@student.42sp.org.br>    +#+  +:+       +#+        --
+--                                                +#+#+#+#+#+   +#+           --
+--   Created: 2023/01/13 15:19:30 by vgoncalv          #+#    #+#             --
+--   Updated: 2023/01/17 18:46:09 by vgoncalv         ###   ########.fr       --
+--                                                                            --
+-- ************************************************************************** --
 ```
 
-## Installation
+## Usage
+### Installation
+
+You can install the plugin using your favorite plugin manager.
+
 <details><summary>Using lazy.nvim</summary>
 
-header42.nvim LazySpec:
-
 ```lua
-local spec = {
+{
 	"vinicius507/header42.nvim",
+	opts = {
+		login = "marvin",
+		email = "marvin@42.fr",
+	}
 }
 ```
 </details>
@@ -33,24 +39,20 @@ local spec = {
 ```lua
 use({
 	"vinicius507/header42.nvim",
+	config = function()
+		require("header42").setup({
+			login = "marvin",
+			email = "marvin@42.fr",
+		})
+	end,
 })
 ```
 </details>
 
-## Setup
-To use header42.nvim, you need to set your Intra `login` and `email`:
+### Inserting/Updating the header
 
-```lua
-local header = require('header42')
+You can insert or update the header using the following `Stdheader` command:
 
-header.setup({
-	login = "marvin",
-	email = "marvin@42.fr",
-})
+```vim
+:Stdheader
 ```
-
-## API
-Header42 exposes a public API for settings autocmds/keymaps.
-
-### `norme.api.insert`
-Inserts an École 42 Header at the current buffer
