@@ -2,6 +2,9 @@
 
 École 42's header plugin written in Lua
 
+> [!WARNING]
+> This plugin has been deprecated in favor of [ft_nvim](https://github.com/vinicius507/ft_nvim)
+
 ```
 -- ************************************************************************** --
 --                                                                            --
@@ -17,6 +20,7 @@
 ```
 
 ## Usage
+
 ### Installation
 
 You can install the plugin using your favorite plugin manager.
@@ -25,28 +29,30 @@ You can install the plugin using your favorite plugin manager.
 
 ```lua
 {
-	"vinicius507/header42.nvim",
-	opts = {
-		login = "marvin",
-		email = "marvin@42.fr",
-	}
+ "vinicius507/header42.nvim",
+ opts = {
+  login = "marvin",
+  email = "marvin@42.fr",
+ }
 }
 ```
+
 </details>
 
 <details><summary>Using Packer</summary>
 
 ```lua
 use({
-	"vinicius507/header42.nvim",
-	config = function()
-		require("header42").setup({
-			login = "marvin",
-			email = "marvin@42.fr",
-		})
-	end,
+ "vinicius507/header42.nvim",
+ config = function()
+  require("header42").setup({
+   login = "marvin",
+   email = "marvin@42.fr",
+  })
+ end,
 })
 ```
+
 </details>
 
 ### Inserting/Updating the header
